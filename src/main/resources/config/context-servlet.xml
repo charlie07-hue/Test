@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+				http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+				http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<!-- 컴포넌트 스캔 -->			
+	<context:component-scan base-package="test"/>
+	<context:component-scan base-package="board"/>
+	<context:component-scan base-package="admin"/>
+	<context:component-scan base-package="user"/>
+	<context:component-scan base-package="comment"/>
+	<context:component-scan base-package="reply"/>
+	
+	<!-- 어노테이션 활성화 -->
+	<mvc:annotation-driven/>
+	
+	<!-- default servlet -->
+	<mvc:default-servlet-handler/>
+	
+	<!-- viewresolver -->
+	<mvc:view-resolvers>
+		<mvc:jsp prefix="/WEB-INF/view/"/>
+		<mvc:jsp suffix=".jsp"/>
+	</mvc:view-resolvers>
+	
+	<mvc:view-controller path="/sample/index.do"/>
+	<mvc:view-controller path="/sample/login.do"/>
+	<mvc:view-controller path="/sample/join.do"/>
+	<mvc:view-controller path="/sample/board_list.do"/>
+	<mvc:view-controller path="/sample/board_view.do"/>
+	<mvc:view-controller path="/sample/board_write.do"/>
+	
+	<!-- DBCP -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" 
+			destroy-method="close">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+		<property name="url" value="jdbc:mysql://localhost:3306/project"></property>
+		<property name="username" value="root"></property>
+		<property name="password" value="root1234"></property>
+	</bean>
+	
+	<!-- factory bean -->
+	<bean id="sqlSessionFactory" 
+			class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="mapperLocations" value="classpath:/mapper/**/*.xml"/>
+	</bean>
+	
+	<!-- dao에서 주입받아서 사용할 객체 -->
+	<bean id="sqlSessionTemplate"
+			class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory"></constructor-arg>
+	</bean>
+
+	<!-- 파일업로드 -->
+	<bean id="multipartResolver" 
+	class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<!-- 인코딩캐릭터셋 -->
+		<property name="defaultEncoding" value="UTF-8"/>
+		<!-- 최대업로드사이즈(바이트단위) --> 
+		<property name="maxUploadSize" value="100000000"/>
+	</bean>
+
+	<!-- 인터셉터 -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/board/write.do"/>
+			<mvc:mapping path="/board/edit.do"/>
+			<mvc:mapping path="/board/update.do"/>
+			<mvc:mapping path="/board/delete.do"/>
+			<mvc:mapping path="/user/mypage.do"/>
+		<!-- 
+		 	<mvc:mapping path="/board/**"/>
+		 	<mvc:exclude-mapping path="/board/index.do"/>
+		 -->
+			<bean class="interceptor.LoginInterceptor"/>
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+
+
+
+
+
+</beans>

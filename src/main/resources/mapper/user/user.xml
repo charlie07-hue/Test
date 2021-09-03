@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="user">
+
+	<sql id="userWhere">
+		<where>
+			<if test="sval != null and sval != ''">
+				<if test="stype == 'all'">
+					id LIKE '%${sval}%' OR name LIKE '%${sval}%'
+				</if>
+				<if test="stype != 'all'">
+					${stype} LIKE '%${sval}%'
+				</if>
+			</if>
+		</where>
+	</sql>
+	
+	<select id="selectAll" resultType="user.UserVo" parameterType="user.UserVo">
+		SELECT * FROM user
+		<include refid="userWhere"/>
+		ORDER BY ${orderby} ${direct}
+		LIMIT ${startIdx},${pageRow}
+	</select>
+	
+	<select id="count" resultType="int" parameterType="user.UserVo">
+		SELECT COUNT(*) FROM user
+		<include refid="userWhere"/>
+	</select>
+	
+	<select id="detail" resultType="user.UserVo" parameterType="user.UserVo">
+		SELECT * FROM user WHERE no = #{no}
+	</select>
+	
+	<insert id="insert" parameterType="user.UserVo">
+		INSERT INTO user (id, pwd, name, email, tel, zipcode, addr1, addr2, regdate)
+		VALUES (#{id}, md5(#{pwd}), #{name}, #{email}, #{tel}, #{zipcode}, #{addr1}, #{addr2}, NOW())
+	</insert>
+	
+	<update id="update" parameterType="user.UserVo">
+		UPDATE user SET
+			pwd=md5(#{pwd}), email=#{email}
+			, tel=#{tel} , zipcode=#{zipcode}
+			, addr1=#{addr1} , addr2=#{addr2}
+		WHERE no=#{no}
+	</update>
+	
+	<delete id="delete" parameterType="user.UserVo">
+		DELETE FROM user WHERE no=#{no}
+	</delete>
+	
+	<select id="isDuplicateId" resultType="int" parameterType="String">
+		SELECT COUNT(*) FROM user WHERE id=#{id}
+	</select>
+	
+	<select id="login" resultType="user.UserVo" parameterType="user.UserVo">
+		SELECT * FROM user WHERE id=#{id} AND pwd=md5(#{pwd})
+	</select>
+	
+	<!-- 아이디 찾기 -->
+	<select id="searchId" resultType="user.UserVo" parameterType="user.UserVo">
+		SELECT * FROM user WHERE name=#{name} AND email=#{email}
+	</select>
+	
+	<!-- 비밀번호 찾기에서 아이디,이메일로 조회 -->
+	<select id="searchPwd" resultType="user.UserVo" parameterType="user.UserVo">
+		SELECT * FROM user WHERE id=#{id} AND email=#{email}
+	</select>
+	
+	<!-- 임시비밀번호로 수정 -->
+	<update id="updateTempPwd" parameterType="user.UserVo">
+		UPDATE user SET
+			pwd = md5(#{pwd})
+		WHERE id=#{id} AND email=#{email}
+	</update>
+	
+</mapper>
